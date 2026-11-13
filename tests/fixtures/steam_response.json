@@ -1,0 +1,29 @@
+{
+  "specials": {
+    "items": [
+      {
+        "id": 123456,
+        "type": 0,
+        "name": "Mock Steam Free Deal",
+        "discounted": true,
+        "discount_percent": 100,
+        "original_price": 1999,
+        "final_price": 0,
+        "currency": "USD",
+        "header_image": "https://cdn.example.com/steam_header.jpg",
+        "discount_expiration": 4102444800
+      },
+      {
+        "id": 999999,
+        "type": 0,
+        "name": "Mock Regular Discount",
+        "discounted": true,
+        "discount_percent": 50,
+        "original_price": 2999,
+        "final_price": 1499,
+        "currency": "USD",
+        "header_image": "https://cdn.example.com/steam_paid.jpg"
+      }
+    ]
+  }
+}
