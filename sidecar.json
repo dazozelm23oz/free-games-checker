@@ -1,0 +1,19 @@
+{
+  "builtin": "schedule",
+  "args": [
+    "CRON_TZ=Africa/Cairo 0 1 * * *",
+    "agentapi",
+    "new-conversation",
+    "--",
+    "Check for any free-to-keep PC games currently available on Steam, Epic Games Store, and other giveaways by executing `python C:\\Users\\Ziad\\.gemini\\config\\sidecars\\free-games-checker\\check_free_games.py`. Display the active free games with their titles, platforms, original value, expiration deadlines, and direct claim links so they can be claimed in one click."
+  ],
+  "restart_policy": "always",
+  "display_name": "Free Games Checker",
+  "description": "Twice daily at 1:00 AM and 7:00 PM (Africa/Cairo), checks Steam, Epic Games Store, and PC giveaways for free-to-keep games and summarizes them with claim links.",
+  "agent_permissions": {
+    "access_grants": [
+      "command(python C:\\Users\\Ziad\\.gemini\\config\\sidecars\\free-games-checker\\check_free_games.py)",
+      "command(python3 /home/ziadm/.gemini/config/sidecars/free-games-checker/check_free_games.py)"
+    ]
+  }
+}
