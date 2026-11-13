@@ -1,7 +1,7 @@
 {
   "builtin": "schedule",
   "args": [
-    "CRON_TZ=Africa/Cairo 0 1 * * *",
+    "CRON_TZ=Africa/Cairo 0 1,19 * * *",
     "agentapi",
     "new-conversation",
     "--",

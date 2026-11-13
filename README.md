@@ -1,37 +1,54 @@
-# 🎮 Free Games Checker
+# Free Games Checker
 
-An automated tracker and notification sidecar that checks for 100% free-to-keep PC games across **Epic Games Store**, **Steam**, and other gaming platforms.
+A PySide6 desktop application that tracks 100% free-to-keep PC games across multiple platforms (Epic Games Store, Steam, GOG, and GamerPower), alerts you across customizable notification channels, and tracks your claimed games.
 
-## ✨ Features
+---
 
-- **Store Integrations:** Queries Epic Games Store Promotions API and GamerPower giveaways.
-- **Noise Filtering:** Filters out DLCs, beta playtests, and external key giveaways to prioritize standalone full games.
-- **Claim Tracking:** Maintains local history in `claimed_games.json` to avoid duplicate notifications once a game is claimed.
-- **Direct Claim Links:** Provides direct store links for one-click claiming.
-- **Antigravity Automation Sidecar:** Configured with `sidecar.json` for scheduled execution twice daily.
+## Features
 
-## 🚀 Usage
+- **Store Coverage:** Checks Epic Games Store, Steam, GOG, and GamerPower for full games.
+- **Noise Filtering:** Discards DLCs, playtests, and external key raffles.
+- **Desktop GUI:** Built with PySide6, featuring cards, live search, and store filter tabs.
+- **System Tray:** Runs in the background and minimizes to tray.
+- **Notifications:** Desktop alerts, Discord webhooks, Telegram, and SMTP email.
+- **Claimed Tracker:** Persistent claim history and money saved statistics.
+- **Resilience:** Circuit breakers, tenacity retries, and async non-blocking queries.
+- **Headless Mode:** CLI flag `--headless` for running via automated sidecars or cron.
 
-### Check Active Games
+---
+
+## Installation & Usage
+
 ```bash
-python check_free_games.py
+# Setup environment
+python -m venv .venv
+source .venv/bin/activate
+
+# Install in editable mode
+pip install -e .
+
+# Launch Desktop GUI
+free-games-checker
+
+# Or run headless check
+free-games-checker --headless
 ```
 
-### Mark a Game as Claimed
+---
+
+## Configuration
+
+Settings are saved to `config.toml` in your user config folder:
+- Schedule: check interval and timezone.
+- Stores: toggle individual store checkers.
+- Notifications: toggle and credentials for Desktop, Discord, Telegram, and Email.
+
+---
+
+## Testing
+
 ```bash
-python check_free_games.py --claim "Game Title" --platform "Epic Games Store"
+QT_QPA_PLATFORM=offscreen pytest tests/ -v --cov=free_games_checker --cov-fail-under=70
+ruff check .
+mypy --strict free_games_checker
 ```
-
-### Unclaim a Game
-```bash
-python check_free_games.py --unclaim "Game Title"
-```
-
-### View Claim History
-```bash
-python check_free_games.py --list-claimed
-```
-
-## ⚙️ Automation & Sidecar
-
-The included `sidecar.json` configures Antigravity to run this checker twice daily (at 1:00 AM and 7:00 PM Africa/Cairo time).

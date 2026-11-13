@@ -1,0 +1,60 @@
+{
+  "data": {
+    "Catalog": {
+      "searchStore": {
+        "elements": [
+          {
+            "title": "Mock Epic Free Game",
+            "id": "mock-epic-1",
+            "productSlug": "mock-epic-free-game",
+            "keyImages": [
+              {
+                "type": "Thumbnail",
+                "url": "https://cdn.example.com/mock.jpg"
+              }
+            ],
+            "price": {
+              "totalPrice": {
+                "originalPrice": 2999,
+                "currencyCode": "USD"
+              }
+            },
+            "promotions": {
+              "promotionalOffers": [
+                {
+                  "promotionalOffers": [
+                    {
+                      "startDate": "2026-11-01T16:00:00.000Z",
+                      "endDate": "2099-12-31T16:00:00.000Z",
+                      "discountSetting": {
+                        "discountType": "PERCENTAGE",
+                        "discountPercentage": 0
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "title": "Mock Paid Game",
+            "id": "mock-epic-paid",
+            "promotions": {
+              "promotionalOffers": [
+                {
+                  "promotionalOffers": [
+                    {
+                      "discountSetting": {
+                        "discountPercentage": 50
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

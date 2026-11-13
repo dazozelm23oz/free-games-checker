@@ -1,0 +1,41 @@
+[
+  {
+    "id": 101,
+    "title": "Mock Full Giveaway Game (Steam) Giveaway",
+    "worth": "$19.99",
+    "thumbnail": "https://cdn.example.com/gp.jpg",
+    "image": "https://cdn.example.com/gp.jpg",
+    "description": "A great free adventure game.",
+    "instructions": "Click to claim.",
+    "open_giveaway_url": "https://store.steampowered.com/app/101/",
+    "published_date": "2026-11-10 12:00:00",
+    "type": "Game",
+    "platforms": "Steam",
+    "end_date": "2099-12-31 23:59:59",
+    "status": "Active"
+  },
+  {
+    "id": 102,
+    "title": "Beta Playtest Steam Key",
+    "worth": "N/A",
+    "description": "Get your Steam key here.",
+    "instructions": "Redeem your product key.",
+    "open_giveaway_url": "https://example.com/keys",
+    "type": "Early Access",
+    "platforms": "Steam",
+    "end_date": "2099-12-31 23:59:59",
+    "status": "Active"
+  },
+  {
+    "id": 103,
+    "title": "Cosmetic DLC Pack",
+    "worth": "$4.99",
+    "description": "In-game skin loot pack",
+    "instructions": "Claim loot",
+    "open_giveaway_url": "https://example.com/dlc",
+    "type": "DLC",
+    "platforms": "PC",
+    "end_date": "2099-12-31 23:59:59",
+    "status": "Active"
+  }
+]

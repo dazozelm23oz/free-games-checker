@@ -1,3 +1,28 @@
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Python cache & bytecode
 __pycache__/
 *.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Type checking & linting
+.mypy_cache/
+.ruff_cache/
+
+# Local utility scripts
 restore_schedule.py
+
+# User configs / temporary databases during local testing
+tests/.test_config/
