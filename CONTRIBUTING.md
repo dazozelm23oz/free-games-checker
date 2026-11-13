@@ -63,6 +63,7 @@ Adding a new game store or giveaway platform requires just two simple steps:
    from free_games_checker.models.game import Game
    from free_games_checker.utils.http import fetch_json
 
+
    class ItchIoChecker(BaseChecker):
        name: ClassVar[str] = "itch.io"
 
