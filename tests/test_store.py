@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from free_games_checker.models.game import Game
 from free_games_checker.services.store import ClaimStore
 
@@ -69,3 +71,38 @@ def test_corrupt_file_recovery(tmp_path: Path) -> None:
     # Verify backup was created
     backups = list(tmp_path.glob("claimed_corrupt.bak.*"))
     assert len(backups) == 1
+
+
+def test_claim_store_legacy_migration(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    config_dir = tmp_path / "user_config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(
+        "free_games_checker.models.config.AppConfig.get_default_config_dir",
+        classmethod(lambda cls: config_dir),
+    )
+
+    work_dir = tmp_path / "work"
+    work_dir.mkdir(parents=True, exist_ok=True)
+    legacy_file = work_dir / "claimed_games.json"
+    legacy_file.write_text(
+        "{\n"
+        '  "tracking_started": "2024-01-01",\n'
+        '  "claimed_games": [\n'
+        "    {\n"
+        '      "id": "legacy:1",\n'
+        '      "title": "Legacy Migrated Game",\n'
+        '      "store": "Epic Games",\n'
+        '      "url": "https://epicgames.com",\n'
+        '      "original_price": "$19.99"\n'
+        "    }\n"
+        "  ]\n"
+        "}\n"
+    )
+    monkeypatch.chdir(work_dir)
+
+    store = ClaimStore()
+    target_path = config_dir / "claimed_games.json"
+    assert store.file_path == target_path
+    assert target_path.exists()
+    assert store.is_claimed("Legacy Migrated Game") is True
+    assert len(store.get_all_claimed()) == 1

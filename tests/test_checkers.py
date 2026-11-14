@@ -11,6 +11,7 @@ from free_games_checker.checkers import (
     CheckerRegistry,
     EpicChecker,
     GamerPowerChecker,
+    GOGChecker,
     SteamChecker,
 )
 from free_games_checker.checkers.base import CircuitBreaker
@@ -94,6 +95,21 @@ async def test_gamerpower_checker_filtering(gamerpower_fixture: list[dict[str, A
         assert "Mock Full Giveaway Game" in titles[0]
         assert not any("DLC" in t for t in titles)
         assert not any("Key" in t for t in titles)
+
+
+@pytest.mark.asyncio
+async def test_gog_checker_parsing(gog_fixture: list[dict[str, Any]]) -> None:
+    checker = GOGChecker()
+    with patch("free_games_checker.checkers.gog.fetch_json", new_callable=AsyncMock) as mock_fetch:
+        mock_fetch.return_value = gog_fixture
+        games = await checker.fetch(force_refresh=True)
+
+        assert len(games) == 1
+        g = games[0]
+        assert g.title == "Mock GOG Classic Adventure"
+        assert g.store == "GOG"
+        assert g.original_price == "$14.99"
+        assert "mock_adventure" in g.url
 
 
 @pytest.mark.asyncio

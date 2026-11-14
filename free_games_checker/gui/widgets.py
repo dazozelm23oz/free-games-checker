@@ -113,8 +113,16 @@ class GameCardWidget(QFrame):
         tag_row.setSpacing(10)
 
         # Price tag: Strikethrough price + FREE (100% OFF)
-        self.price_label = QLabel(f"~~{game.original_price}~~  FREE (100% OFF)")
-        self.price_label.setStyleSheet("color: #00e676; font-weight: bold; font-size: 12px;")
+        self.price_label = QLabel()
+        self.price_label.setTextFormat(Qt.TextFormat.RichText)
+        if game.original_price and game.original_price.strip() and game.original_price != "$0.00":
+            self.price_label.setText(
+                f"<span style='color: #90a4ae;'><s>{game.original_price}</s></span>  "
+                f"<b style='color: #00e676;'>FREE (100% OFF)</b>"
+            )
+        else:
+            self.price_label.setText("<b style='color: #00e676;'>FREE</b>")
+        self.price_label.setStyleSheet("font-size: 12px;")
         tag_row.addWidget(self.price_label)
 
         # Expiration Urgency Pill

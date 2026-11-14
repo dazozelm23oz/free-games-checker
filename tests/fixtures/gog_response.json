@@ -1,0 +1,26 @@
+[
+  {
+    "id": 201,
+    "title": "Mock GOG Classic Adventure (GOG) Giveaway",
+    "worth": "$14.99",
+    "thumbnail": "https://cdn.example.com/gog_thumb.jpg",
+    "image": "https://cdn.example.com/gog_banner.jpg",
+    "description": "Claim this classic DRM-free adventure on GOG.",
+    "instructions": "Click to claim on GOG.",
+    "open_giveaway_url": "https://www.gog.com/game/mock_adventure",
+    "published_date": "2026-11-12 10:00:00",
+    "type": "Game",
+    "platforms": "GOG",
+    "end_date": "2099-12-31 23:59:59",
+    "status": "Active"
+  },
+  {
+    "id": 202,
+    "title": "GOG Cosmetic DLC",
+    "worth": "$2.99",
+    "type": "DLC",
+    "platforms": "GOG",
+    "end_date": "2099-12-31 23:59:59",
+    "status": "Active"
+  }
+]
