@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from pytestqt.qtbot import QtBot
 
+from free_games_checker.gui.details_dialog import GameDetailsDialog
 from free_games_checker.gui.main_window import MainWindow
 from free_games_checker.gui.settings_dialog import SettingsDialog
 from free_games_checker.gui.widgets import GameCardWidget, SearchBar, StoreFilterBar
@@ -154,3 +155,23 @@ def test_main_window_export_csv(tmp_path: Path, qtbot: QtBot) -> None:
 
         win.scheduler.stop()
         win.tray.hide()
+
+
+def test_game_details_dialog(qtbot: QtBot) -> None:
+    game = Game(
+        id="modal:1",
+        title="Modal Test Title",
+        store="Epic Games Store",
+        url="https://example.com/modal",
+        original_price="$39.99",
+        end_date="2026-12-31",
+        description="A great game.",
+    )
+    dialog = GameDetailsDialog(game)
+    qtbot.addWidget(dialog)
+
+    assert "Modal Test Title" in dialog.windowTitle()
+    assert dialog.game.original_price == "$39.99"
+    with patch("webbrowser.open") as mock_open:
+        dialog._on_claim_clicked()
+        mock_open.assert_called_once_with("https://example.com/modal")

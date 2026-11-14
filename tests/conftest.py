@@ -62,3 +62,9 @@ def steam_fixture() -> dict[str, Any]:
 def gamerpower_fixture() -> list[dict[str, Any]]:
     with open(FIXTURES_DIR / "gamerpower_response.json", encoding="utf-8") as f:
         return json.load(f)
+
+
+@pytest.fixture
+def gog_fixture() -> list[dict[str, Any]]:
+    with open(FIXTURES_DIR / "gog_response.json", encoding="utf-8") as f:
+        return json.load(f)

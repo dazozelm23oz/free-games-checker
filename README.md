@@ -45,6 +45,18 @@ Settings are saved to `config.toml` in your user config folder:
 
 ---
 
+## Desktop Integration
+
+To register Free Games Checker with your Linux desktop environment's application launcher and system menus, run the idempotent installation script:
+
+```bash
+./scripts/install-desktop-entry.sh
+```
+
+This generates and registers `~/.local/share/applications/free-games-checker.desktop` pointing directly to your environment's virtualenv Python executable and bundled application icon.
+
+---
+
 ## Testing
 
 ```bash

@@ -53,6 +53,9 @@ free-games-checker = "free_games_checker.app:main"
 [tool.hatch.build.targets.wheel]
 packages = ["free_games_checker"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"free_games_checker/assets" = "free_games_checker/assets"
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
