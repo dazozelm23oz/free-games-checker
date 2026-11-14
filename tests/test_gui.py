@@ -103,6 +103,28 @@ def test_main_window_renders_cards(tmp_path: Path, qtbot: QtBot) -> None:
         win.tray.hide()
 
 
+def test_game_details_dialog(qtbot: QtBot) -> None:
+    from free_games_checker.gui.details_dialog import GameDetailsDialog
+
+    game = Game(
+        id="details:1",
+        title="Details Dialog Game",
+        store="Epic Games Store",
+        url="https://example.com/details",
+        original_price="$19.99",
+        description="A fun test adventure.",
+    )
+    dlg = GameDetailsDialog(game)
+    qtbot.addWidget(dlg)
+
+    assert dlg.title_lbl.text() == "Details Dialog Game"
+    assert "$19.99" in dlg.val_lbl.text()
+
+    with qtbot.waitSignal(dlg.claim_confirmed, timeout=1000) as blocker:
+        dlg.mark_btn.click()
+    assert blocker.args[0].title == "Details Dialog Game"
+
+
 def test_first_run_dialog(qtbot: QtBot) -> None:
     from free_games_checker.gui.first_run_dialog import FirstRunDialog
 
@@ -154,3 +176,25 @@ def test_main_window_export_csv(tmp_path: Path, qtbot: QtBot) -> None:
 
         win.scheduler.stop()
         win.tray.hide()
+
+
+def test_game_details_dialog(qtbot: QtBot) -> None:
+    from free_games_checker.gui.details_dialog import GameDetailsDialog
+
+    game = Game(
+        id="details:1",
+        title="Details Dialog Game",
+        store="Epic Games Store",
+        url="https://example.com/details",
+        original_price="$19.99",
+        description="A fun test adventure.",
+    )
+    dlg = GameDetailsDialog(game)
+    qtbot.addWidget(dlg)
+
+    assert dlg.title_lbl.text() == "Details Dialog Game"
+    assert "$19.99" in dlg.val_lbl.text()
+
+    with qtbot.waitSignal(dlg.claim_confirmed, timeout=1000) as blocker:
+        dlg.mark_btn.click()
+    assert blocker.args[0].title == "Details Dialog Game"

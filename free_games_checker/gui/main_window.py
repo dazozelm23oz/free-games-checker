@@ -5,12 +5,13 @@ from __future__ import annotations
 import asyncio
 import csv
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Qt, QThread, Signal
-from PySide6.QtGui import QCloseEvent, QFont
+from PySide6.QtGui import QCloseEvent, QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
@@ -34,7 +35,12 @@ from free_games_checker.checkers import CheckerRegistry
 from free_games_checker.gui.first_run_dialog import FirstRunDialog
 from free_games_checker.gui.settings_dialog import SettingsDialog
 from free_games_checker.gui.tray_icon import AppTrayIcon, create_default_tray_icon
-from free_games_checker.gui.widgets import GameCardWidget, SearchBar, StoreFilterBar
+from free_games_checker.gui.widgets import (
+    GameCardWidget,
+    SearchBar,
+    SortDropdown,
+    StoreFilterBar,
+)
 from free_games_checker.models.config import AppConfig
 from free_games_checker.models.game import Game
 from free_games_checker.services.notifier import NotificationService
@@ -98,15 +104,17 @@ class MainWindow(QMainWindow):
         self.active_games: list[Game] = []
         self.current_filter_store = "All Stores"
         self.current_search_query = ""
+        self.current_sort = "Sort: Newest First"
         self.last_check_time: str = "Never"
         self._worker: CheckWorker | None = None
 
         self.setWindowTitle("🎮 Free Games Checker")
-        self.resize(850, 680)
+        self.resize(880, 700)
         self.setWindowIcon(create_default_tray_icon())
         self._apply_theme()
 
         self._build_ui()
+        self._setup_shortcuts()
         self._init_tray()
         self._init_scheduler()
 
@@ -118,13 +126,13 @@ class MainWindow(QMainWindow):
 
     def _apply_theme(self) -> None:
         self.setStyleSheet("""
-            QMainWindow { background-color: #1e1f22; }
+            QMainWindow { background-color: #171920; }
             QWidget { color: #ffffff; font-family: 'Segoe UI', Arial, sans-serif; }
-            QTabWidget::pane { border: none; background: #1e1f22; }
-            QTabBar::tab { background: #2b2d30; color: #a9b7c6; padding: 10px 20px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; margin-right: 4px; }
+            QTabWidget::pane { border: none; background: #171920; }
+            QTabBar::tab { background: #242731; color: #a0aec0; padding: 10px 22px; font-weight: bold; border-top-left-radius: 6px; border-top-right-radius: 6px; margin-right: 4px; font-size: 13px; }
             QTabBar::tab:selected { background: #3574f0; color: #ffffff; }
             QScrollArea { border: none; background-color: transparent; }
-            QStatusBar { background: #2b2d30; color: #a9b7c6; font-size: 11px; }
+            QStatusBar { background: #242731; color: #a0aec0; font-size: 11px; }
         """)
 
     def _build_ui(self) -> None:
@@ -137,11 +145,11 @@ class MainWindow(QMainWindow):
         # 1. Header Toolbar
         header = QHBoxLayout()
         title_box = QVBoxLayout()
-        app_title = QLabel("Free PC Games")
+        app_title = QLabel("🎮 Free PC Games")
         app_title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
         title_box.addWidget(app_title)
 
-        self.subtitle = QLabel("Checking Epic, Steam, GOG & Giveaways")
+        self.subtitle = QLabel("Live giveaways from Epic Games, Steam, GOG & Aggregators")
         self.subtitle.setStyleSheet("color: #8c9299; font-size: 12px;")
         title_box.addWidget(self.subtitle)
         header.addLayout(title_box)
@@ -158,41 +166,60 @@ class MainWindow(QMainWindow):
 
         self.check_btn = QPushButton("⚡ Check Now")
         self.check_btn.setStyleSheet(
-            "background-color: #3574f0; color: white; font-weight: bold; padding: 6px 14px; border-radius: 4px;"
+            "background-color: #3574f0; color: white; font-weight: bold; padding: 7px 16px; border-radius: 4px;"
         )
         self.check_btn.clicked.connect(lambda: self.check_now(force=True))
         header.addWidget(self.check_btn)
 
         self.export_btn = QPushButton("💾 Export")
         self.export_btn.setStyleSheet(
-            "background-color: #2b2d30; border: 1px solid #3c3f41; padding: 6px 12px; border-radius: 4px;"
+            "background-color: #242731; border: 1px solid #323644; padding: 7px 12px; border-radius: 4px;"
         )
         self.export_btn.clicked.connect(self._on_export_clicked)
         header.addWidget(self.export_btn)
 
         self.settings_btn = QPushButton("⚙️ Settings")
         self.settings_btn.setStyleSheet(
-            "background-color: #2b2d30; border: 1px solid #3c3f41; padding: 6px 12px; border-radius: 4px;"
+            "background-color: #242731; border: 1px solid #323644; padding: 7px 12px; border-radius: 4px;"
         )
         self.settings_btn.clicked.connect(self._open_settings)
         header.addWidget(self.settings_btn)
 
         main_layout.addLayout(header)
 
-        # 2. Filter & Search row
+        # 2. Metrics Summary Ribbon
+        self.metrics_ribbon = QLabel("✨ 0 Active Giveaways Available • Total Value: $0.00")
+        self.metrics_ribbon.setStyleSheet("""
+            QLabel {
+                background-color: #1e222d;
+                color: #00e676;
+                font-weight: bold;
+                font-size: 12px;
+                padding: 7px 12px;
+                border-radius: 6px;
+                border: 1px solid #2d3242;
+            }
+        """)
+        main_layout.addWidget(self.metrics_ribbon)
+
+        # 3. Filter & Search row
         filter_row = QHBoxLayout()
         self.filter_bar = StoreFilterBar()
         self.filter_bar.filter_changed.connect(self._on_filter_store_changed)
         filter_row.addWidget(self.filter_bar)
 
+        self.sort_dropdown = SortDropdown()
+        self.sort_dropdown.sort_changed.connect(self._on_sort_changed)
+        filter_row.addWidget(self.sort_dropdown)
+
         self.search_bar = SearchBar()
         self.search_bar.search_changed.connect(self._on_search_query_changed)
-        self.search_bar.setFixedWidth(240)
+        self.search_bar.setFixedWidth(230)
         filter_row.addWidget(self.search_bar)
 
         main_layout.addLayout(filter_row)
 
-        # 3. Main Tabs
+        # 4. Main Tabs
         self.tabs = QTabWidget()
 
         # Tab 1: Available Games
@@ -227,6 +254,11 @@ class MainWindow(QMainWindow):
         self.money_saved_label.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         self.money_saved_label.setStyleSheet("color: #3dd68c;")
         banner_layout.addWidget(self.money_saved_label)
+
+        self.rank_label = QLabel("🏆 Level: Looter")
+        self.rank_label.setStyleSheet("color: #ffd54f; font-weight: bold; font-size: 12px;")
+        banner_layout.addWidget(self.rank_label)
+
         banner_layout.addStretch(1)
         hist_layout.addWidget(self.money_saved_banner)
 
@@ -252,8 +284,8 @@ class MainWindow(QMainWindow):
             4, QHeaderView.ResizeMode.ResizeToContents
         )
         self.claimed_table.setStyleSheet("""
-            QTableWidget { background-color: #2b2d30; gridline-color: #3c3f41; border: 1px solid #3c3f41; }
-            QHeaderView::section { background-color: #1e1f22; color: #a9b7c6; padding: 6px; border: 1px solid #3c3f41; }
+            QTableWidget { background-color: #242731; gridline-color: #323644; border: 1px solid #323644; }
+            QHeaderView::section { background-color: #171920; color: #a0aec0; padding: 6px; border: 1px solid #323644; }
         """)
         hist_layout.addWidget(self.claimed_table)
 
@@ -261,13 +293,24 @@ class MainWindow(QMainWindow):
 
         main_layout.addWidget(self.tabs, stretch=1)
 
-        # 4. Status Bar
+        # 5. Status Bar
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_label = QLabel("Ready")
         self.status_bar.addWidget(self.status_label, stretch=1)
         self.store_health_label = QLabel("")
         self.status_bar.addPermanentWidget(self.store_health_label)
+
+    def _setup_shortcuts(self) -> None:
+        """Register keyboard shortcuts for fast navigation."""
+        sc_f = QShortcut(QKeySequence("Ctrl+F"), self)
+        sc_f.activated.connect(self._focus_search)
+        sc_k = QShortcut(QKeySequence("Ctrl+K"), self)
+        sc_k.activated.connect(self._focus_search)
+
+    def _focus_search(self) -> None:
+        self.search_bar.setFocus()
+        self.search_bar.selectAll()
 
     def _init_tray(self) -> None:
         self.tray = AppTrayIcon(self)
@@ -355,8 +398,23 @@ class MainWindow(QMainWindow):
             self, "Check Failed", f"Encountered error while checking stores:\n{err_msg}"
         )
 
+    def _sort_games(self, games: list[Game]) -> list[Game]:
+        """Sort games list based on user dropdown selection."""
+        sorted_list = list(games)
+        if self.current_sort == "Sort: Highest Value ($)":
+
+            def _parse_val(g: Game) -> float:
+                m = re.search(r"(\d+(?:\.\d{1,2})?)", g.original_price or "")
+                return float(m.group(1)) if m else 0.0
+
+            sorted_list.sort(key=_parse_val, reverse=True)
+        elif self.current_sort == "Sort: Ending Soonest":
+            sorted_list.sort(key=lambda g: g.end_date or "9999-12-31")
+        elif self.current_sort == "Sort: Title (A-Z)":
+            sorted_list.sort(key=lambda g: g.title.lower())
+        return sorted_list
+
     def _render_available_cards(self) -> None:
-        # Clear existing cards (except the trailing stretch)
         while self.cards_layout.count() > 1:
             item = self.cards_layout.takeAt(0)
             if item is not None:
@@ -365,6 +423,21 @@ class MainWindow(QMainWindow):
                     widget.deleteLater()
 
         unclaimed_games = [g for g in self.active_games if not self.store.is_claimed(g.title)]
+
+        # Calculate total available free value
+        total_avail_val = 0.0
+        for g in unclaimed_games:
+            m = re.search(r"(\d+(?:\.\d{1,2})?)", g.original_price or "")
+            if m:
+                try:
+                    total_avail_val += float(m.group(1))
+                except ValueError:
+                    pass
+
+        self.metrics_ribbon.setText(
+            f"✨ {len(unclaimed_games)} Active Giveaway{'s' if len(unclaimed_games) != 1 else ''} Available • "
+            f"Total Value: ${total_avail_val:.2f} • Last Synced: {self.last_check_time}"
+        )
 
         # Apply store filter & search filter
         filtered: list[Game] = []
@@ -377,6 +450,7 @@ class MainWindow(QMainWindow):
                     continue
             filtered.append(g)
 
+        filtered = self._sort_games(filtered)
         self.tabs.setTabText(0, f"🟢 Available Now ({len(unclaimed_games)})")
 
         if not filtered:
@@ -400,9 +474,20 @@ class MainWindow(QMainWindow):
         claimed = self.store.get_all_claimed()
         self.tabs.setTabText(1, f"📜 Claimed History ({len(claimed)})")
 
-        # Update saved money banner
+        # Update saved money banner & rank
         saved_val = self.store.get_total_money_saved()
         self.money_saved_label.setText(f"💰 Total Money Saved: ${saved_val:.2f}")
+
+        # Gamified Loot Rank
+        if saved_val > 500:
+            rank = "👑 Legendary Hoarder"
+        elif saved_val > 200:
+            rank = "💎 Master Collector"
+        elif saved_val > 50:
+            rank = "🏹 Seasoned Looter"
+        else:
+            rank = "🌱 Novice Looter"
+        self.rank_label.setText(f"🏆 Rank: {rank} ({len(claimed)} Games)")
 
         self.claimed_table.setRowCount(len(claimed))
         for row, g in enumerate(claimed):
@@ -442,6 +527,10 @@ class MainWindow(QMainWindow):
 
     def _on_filter_store_changed(self, store_name: str) -> None:
         self.current_filter_store = store_name
+        self._render_available_cards()
+
+    def _on_sort_changed(self, sort_name: str) -> None:
+        self.current_sort = sort_name
         self._render_available_cards()
 
     def _on_search_query_changed(self, query: str) -> None:
